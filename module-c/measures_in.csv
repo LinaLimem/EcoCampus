@@ -1,0 +1,6 @@
+id,batiment,ressource,valeur,date,seuil
+1,Bibliotheque,electricite,120,2026-10-01,100
+2,Laboratoire,eau,50,2026-10-01,80
+3,Residence,electricite,90,2026-10-02,100
+4,Administration,chauffage,150,2026-10-02,120
+5,Salle_Cours,electricite,75,2026-10-03,100
