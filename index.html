@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EcoCampus – tableau de bord de suivi de la consommation énergétique du campus (DSI22, Digital Minds).">
+    <title>EcoCampus – Tableau de bord énergétique</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <a class="skip-link" href="#dashboard">Aller au contenu principal</a>
+
+    <main class="dashboard" id="dashboard">
+
+        <!-- 1. En-tête -->
+        <header class="header reveal">
+            <div class="brand">
+                <img src="assets/logo.png"
+                     alt="Logo EcoCampus"
+                     class="brand-logo"
+                     width="54"
+                     height="54">
+                <div class="brand-info">
+                    <div class="brand-title-row">
+                        <h1>EcoCampus</h1>
+                        <span class="brand-badge">DSI22</span>
+                    </div>
+                    <p>Suivi intelligent de la consommation énergétique du campus</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <span class="data-status" id="data-status" role="status" aria-live="polite">Chargement…</span>
+
+                <button type="button" id="load-data" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 16V4"></path>
+                        <path d="m7 9 5-5 5 5"></path>
+                        <path d="M5 20h14"></path>
+                    </svg>
+                    <span>Charger data.json</span>
+                </button>
+
+                <button type="button" id="theme-toggle" class="btn btn-ghost" aria-pressed="false">
+                    <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                         stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                         stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    </svg>
+                    <span id="theme-label">Mode sombre</span>
+                </button>
+
+                <input type="file" id="file-input" accept=".json,application/json" hidden>
+            </div>
+        </header>
+
+        <!-- 2. Indicateurs clés -->
+        <section class="indicators" aria-label="Indicateurs clés">
+
+            <article class="indicator-card" style="--i:0">
+                <div class="indicator-top">
+                    <h2>Consommation totale</h2>
+                    <span class="indicator-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">
+                            <path d="M13 2 4.5 13.5H11l-1 8.5L18.5 10H12l1-8Z"></path>
+                        </svg>
+                    </span>
+                </div>
+                <p class="indicator-value" id="stat-total" data-value="0">--</p>
+                <span class="indicator-unit">kWh / m³ cumulés</span>
+            </article>
+
+            <article class="indicator-card" style="--i:1">
+                <div class="indicator-top">
+                    <h2>Moyenne par bâtiment</h2>
+                    <span class="indicator-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M5 20V10M12 20V4M19 20v-7"></path>
+                        </svg>
+                    </span>
+                </div>
+                <p class="indicator-value" id="stat-average" data-value="0">--</p>
+                <span class="indicator-unit">par bâtiment</span>
+            </article>
+
+            <article class="indicator-card" style="--i:2">
+                <div class="indicator-top">
+                    <h2>Maximum / minimum</h2>
+                    <span class="indicator-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M7 4v16M7 4 4 7M7 4l3 3"></path>
+                            <path d="M17 20V4M17 20l-3-3M17 20l3-3"></path>
+                        </svg>
+                    </span>
+                </div>
+                <p class="indicator-value indicator-value-split">
+                    <span id="stat-max" data-value="0">--</span>
+                    <span class="split-sep">/</span>
+                    <span id="stat-min" data-value="0">--</span>
+                </p>
+                <span class="indicator-unit">maximum / minimum</span>
+            </article>
+
+            <article class="indicator-card near-card" id="near-card" style="--i:3">
+                <div class="indicator-top">
+                    <h2>Proches du seuil</h2>
+                    <span class="indicator-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+                            <path d="M12 9v4M12 17h.01"></path>
+                        </svg>
+                    </span>
+                </div>
+                <p class="indicator-value" id="stat-near" data-value="0">--</p>
+                <span class="indicator-unit"><span id="stat-near-label">mesures</span> entre 90 % et 100 % du seuil</span>
+            </article>
+
+            <article class="indicator-card alert-card" id="alert-card" style="--i:4">
+                <div class="indicator-top">
+                    <h2>Anomalies détectées</h2>
+                    <span class="indicator-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
+                        </svg>
+                    </span>
+                </div>
+                <p class="indicator-value" id="stat-alerts" data-value="0">--</p>
+                <span class="indicator-unit"><span id="stat-alerts-label">alertes</span> au-dessus du seuil</span>
+            </article>
+
+        </section>
+
+        <!-- 3. Recherche et filtres -->
+        <section class="filters reveal" id="filters" aria-labelledby="filters-title">
+            <div class="section-head">
+                <h2 id="filters-title">Recherche et filtres</h2>
+                <button type="button" id="filters-toggle" class="filters-toggle"
+                        aria-expanded="false" aria-controls="filter-fields">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                         stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 6h16M7 12h10M10 18h4"></path>
+                    </svg>
+                    <span>Filtres</span>
+                </button>
+            </div>
+
+            <div class="filter-fields" id="filter-fields">
+                <div class="field field-search">
+                    <label for="search">Recherche</label>
+                    <input type="search" id="search" placeholder="Rechercher un bâtiment…" autocomplete="off">
+                </div>
+
+                <div class="field">
+                    <label for="building">Bâtiment</label>
+                    <select id="building">
+                        <option value="">Tous</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="resource">Ressource</label>
+                    <select id="resource">
+                        <option value="">Toutes</option>
+                        <option value="electricite">Électricité</option>
+                        <option value="eau">Eau</option>
+                        <option value="chauffage">Chauffage</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="date-start">Période : du</label>
+                    <input type="date" id="date-start">
+                </div>
+
+                <div class="field">
+                    <label for="date-end">au</label>
+                    <input type="date" id="date-end">
+                </div>
+
+                <button type="button" id="reset-filters" class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                         stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                    </svg>
+                    <span>Réinitialiser</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 4 et 5. Graphiques -->
+        <section class="charts" aria-label="Visualisations">
+
+            <article class="chart-panel reveal">
+                <div class="panel-head">
+                    <div>
+                        <h2>Consommation par bâtiment</h2>
+                        <p class="panel-sub">Part du seuil de référence consommée</p>
+                    </div>
+                    <span class="panel-hint">% du seuil</span>
+                </div>
+
+                <div class="bar-chart" id="bar-chart" role="img"
+                     aria-label="Chargement du graphique de consommation par bâtiment."></div>
+
+                <div class="chart-legend">
+                    <span class="legend-item"><i class="dot dot-ok"></i>Sous le seuil</span>
+                    <span class="legend-item"><i class="dot dot-warning"></i>Proche du seuil</span>
+                    <span class="legend-item"><i class="dot dot-danger"></i>Au-dessus du seuil</span>
+                    <span class="legend-item"><i class="line-swatch"></i>Seuil de référence</span>
+                </div>
+            </article>
+
+            <article class="chart-panel pie-panel reveal">
+                <div class="panel-head">
+                    <div>
+                        <h2>Répartition par ressource</h2>
+                        <p class="panel-sub">Consommation cumulée</p>
+                    </div>
+                </div>
+
+                <div class="donut-wrap">
+                    <svg class="donut" id="donut-chart" viewBox="0 0 42 42" aria-hidden="true">
+                        <circle class="donut-ring" cx="21" cy="21" r="15.9155"></circle>
+                    </svg>
+                    <div class="donut-center">
+                        <strong id="donut-center-value">--</strong>
+                        <span id="donut-center-label">aucune donnée</span>
+                    </div>
+                </div>
+
+                <ul class="pie-legend" id="pie-legend">
+                    <li class="pie-empty">Chargement des données…</li>
+                </ul>
+            </article>
+
+        </section>
+
+        <!-- 6. Liste des mesures -->
+        <section class="measurements reveal" aria-labelledby="table-title">
+            <div class="panel-head">
+                <div>
+                    <h2 id="table-title">Liste des mesures</h2>
+                    <p class="panel-sub">Cliquez sur un en-tête pour trier</p>
+                </div>
+                <span class="panel-hint" id="table-count">--</span>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <caption class="visually-hidden">Liste des mesures de consommation du campus</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" data-key="nom_batiment" tabindex="0" aria-sort="none">
+                                Bâtiment <span class="sort-ind" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-key="type_ressource" tabindex="0" aria-sort="none">
+                                Ressource <span class="sort-ind" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-key="date_heure" tabindex="0" aria-sort="none">
+                                Date / heure <span class="sort-ind" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-key="valeur_consommation" tabindex="0" aria-sort="none">
+                                Valeur <span class="sort-ind" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-key="seuil_reference" tabindex="0" aria-sort="none">
+                                Seuil <span class="sort-ind" aria-hidden="true">↕</span>
+                            </th>
+                            <th scope="col" data-key="alerte" tabindex="0" aria-sort="none">
+                                Statut <span class="sort-ind" aria-hidden="true">↕</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="measures-body">
+                        <tr class="empty-row">
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <strong>Chargement des mesures…</strong>
+                                    <span>Lecture du fichier data.json</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 7. Pied de page -->
+        <footer class="footer reveal">
+            <span>EcoCampus — DSI22 — Digital Minds — 2026 / 2027</span>
+            <span id="footer-update"></span>
+        </footer>
+
+    </main>
+
+    <button type="button" class="chat-fab" id="chat-toggle" aria-expanded="false"
+            aria-controls="chat-panel" aria-label="Ouvrir l’assistant EcoCampus">
+        <svg class="chat-fab-open" viewBox="0 0 24 24" width="26" height="26" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.3 9.3 0 0 1-3.8-.8L3 21l1.9-4.6A8.4 8.4 0 1 1 21 11.5Z"></path>
+            <path d="M8 11h.01M12 11h.01M16 11h.01"></path>
+        </svg>
+        <svg class="chat-fab-close" viewBox="0 0 24 24" width="24" height="24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12"></path>
+        </svg>
+    </button>
+
+    <section class="chat-panel" id="chat-panel" role="dialog" aria-labelledby="chat-title" hidden>
+        <header class="chat-head">
+            <div class="chat-ident">
+                <span class="chat-avatar" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M13 2 4.5 13.5H11l-1 8.5L18.5 10H12l1-8Z"></path>
+                    </svg>
+                </span>
+                <div class="chat-ident-text">
+                    <h2 id="chat-title">Assistant EcoCampus</h2>
+                    <p><span class="chat-status-dot" aria-hidden="true"></span>Réponses locales · data.json</p>
+                </div>
+            </div>
+            <button type="button" class="chat-close" id="chat-close" aria-label="Fermer l’assistant">×</button>
+        </header>
+
+        <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions"></div>
+
+        <div class="chat-suggestions" id="chat-suggestions" aria-label="Questions suggérées">
+            <button type="button" data-q="Consommation totale">Consommation totale</button>
+            <button type="button" data-q="Quelles sont les alertes ?">Alertes</button>
+            <button type="button" data-q="Quel est le bâtiment le plus consommateur ?">Bâtiment le plus gourmand</button>
+            <button type="button" data-q="Répartition par ressource">Répartition par ressource</button>
+            <button type="button" data-q="Liste des bâtiments">Bâtiments</button>
+        </div>
+
+        <form class="chat-form" id="chat-form">
+            <label class="visually-hidden" for="chat-input">Votre message</label>
+            <input type="text" id="chat-input" placeholder="Posez votre question…" autocomplete="off" enterkeyhint="send">
+            <button type="submit" class="chat-send" aria-label="Envoyer le message">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m22 2-7 20-4-9-9-4Z"></path>
+                    <path d="M22 2 11 13"></path>
+                </svg>
+            </button>
+        </form>
+    </section>
+
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
